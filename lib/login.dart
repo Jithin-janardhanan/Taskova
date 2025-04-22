@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:taskova/homepage.dart';
 import 'package:taskova/validator.dart';
 
 import 'applelogi.dart';
@@ -15,12 +17,41 @@ class _LoginState extends State<Login> {
   final _emailcontroller = TextEditingController();
   final _passwordcontroller = TextEditingController();
   final _formkey = GlobalKey<FormState>();
+  final _googleSignIn = GoogleSignIn();
+  bool _passwordVisible = false;
+
+  void googleLogin() async {
+    try {
+      var user = await _googleSignIn.signIn();
+      if (user != null) {
+        print('User logged in successfully');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(
+              email: user.email,
+              name: user.displayName ?? "No Name",
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Google login failed: $e");
+    }
+  }
+
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
     _emailcontroller.dispose();
     _passwordcontroller.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordVisible = false;
   }
 
   @override
@@ -36,20 +67,35 @@ class _LoginState extends State<Login> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextFormField(
-                    validator: validateEmail,
-                    controller: _emailcontroller,
-                    decoration: InputDecoration(
-                        prefixIcon: Icon(
-                          Icons.email,
-                          color: const Color.fromARGB(255, 37, 97, 143),
-                        ),
-                        border: OutlineInputBorder(),
-                        labelText: 'Email')),
+                  validator: validateEmail,
+                  controller: _emailcontroller,
+                  decoration: InputDecoration(
+                      prefixIcon: Icon(
+                        Icons.email,
+                        color: const Color.fromARGB(255, 37, 97, 143),
+                      ),
+                      border: OutlineInputBorder(),
+                      labelText: 'Email'),
+                ),
                 TextFormField(
                   validator: validatePassword,
                   controller: _passwordcontroller,
-                  obscureText: true,
+                  obscureText: !_passwordVisible,
                   decoration: InputDecoration(
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          // Based on passwordVisible state choose the icon
+                          _passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Theme.of(context).primaryColorDark,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      ),
                       prefixIcon: Icon(
                         Icons.lock,
                         color: const Color.fromARGB(255, 37, 97, 143),
@@ -92,16 +138,33 @@ class _LoginState extends State<Login> {
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
-                TextButton(
+                ElevatedButton(
                   onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => Registration(),
-                      ),
-                    );
+                    googleLogin(); // 🎯 call the function from another file
                   },
-                  child: Text("Create an account"),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 37, 97, 143)),
+                  child: Text(
+                    'google login',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("Dont have an account ?"),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => Registration(),
+                          ),
+                        );
+                      },
+                      child: Text("Register"),
+                    ),
+                  ],
                 )
               ],
             ),

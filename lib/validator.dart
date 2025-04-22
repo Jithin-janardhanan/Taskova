@@ -8,16 +8,18 @@ String? validateEmail(String? value) {
       r'x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])';
   final regex = RegExp(pattern);
 
-  return value!.isNotEmpty && !regex.hasMatch(value)
-      ? 'Enter a valid email address'
-      : null;
+  if (value == null || value.isEmpty) {
+    return 'Please enter email';
+  } else
+    return value.isNotEmpty && !regex.hasMatch(value)
+        ? 'Enter a valid email address'
+        : null;
 }
 
+String? validatePassword(String? value) {
+  RegExp regex =
+      RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$');
 
-
-  String? validatePassword(String? value) {
-  RegExp regex = RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$');
-  
   if (value == null || value.isEmpty) {
     return 'Please enter password';
   } else if (!regex.hasMatch(value)) {
