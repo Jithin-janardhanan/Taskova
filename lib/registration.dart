@@ -110,8 +110,12 @@
 // }
 import 'package:flutter/material.dart';
 import 'package:taskova/colors.dart';
+import 'package:taskova/otp.dart';
 import 'login.dart';
 import 'validator.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
 
 class Registration extends StatefulWidget {
   const Registration({super.key});
@@ -126,11 +130,69 @@ class _RegistrationState extends State<Registration> {
   final _passwordController = TextEditingController();
   final TextEditingController _confirmPass = TextEditingController();
   bool _visiblePassword = false;
+  bool _isLoading = false;
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
     _visiblePassword = false;
+  }
+
+  Future<void> registerUser() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    // Use your computer's actual IP address on the network
+    // For example: "http://192.168.1.5:8000/api/register/"
+    String baseUrl = "http://192.168.20.12:8000/api/register/";
+
+    try {
+      var response = await http
+          .post(
+            Uri.parse(baseUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              "email": _emailController.text,
+              "password": _passwordController.text,
+              "role": "SHOPKEEPER"
+            }),
+          )
+          .timeout(const Duration(
+              seconds: 10)); // Add timeout for better error handling
+
+      if (response.statusCode == 201) {
+        print("Success: ${response.body}");
+
+        // Navigate to OTP verification screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OtpVerification(email: _emailController.text),
+          ),
+        );
+      } else {
+        // Handle error based on status code
+        print("Failed: ${response.statusCode} - ${response.reasonPhrase}");
+        Map<String, dynamic> responseBody = jsonDecode(response.body);
+        setState(() {
+          _errorMessage = responseBody['detail'] ??
+              'Registration failed. Please try again.';
+        });
+      }
+    } catch (e) {
+      print("Error: $e");
+      setState(() {
+        _errorMessage =
+            'Connection error. Please check your internet connection and try again.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -155,7 +217,7 @@ class _RegistrationState extends State<Registration> {
                       color: AppColors.lightBlue,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Icon( 
+                    child: const Icon(
                       Icons.app_registration_rounded,
                       size: 60,
                       color: AppColors.primaryBlue,
@@ -181,45 +243,12 @@ class _RegistrationState extends State<Registration> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: validatePassword,
-                    decoration: InputDecoration(
-                      hintText: 'Username',
-                      prefixIcon: const Icon(
-                        Icons.person_add,
-                        color: AppColors.secondaryBlue,
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey[50],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                            color: AppColors.lightBlue, width: 1),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                            color: AppColors.primaryBlue, width: 2),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            const BorderSide(color: Colors.red, width: 1),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+
                   // Email field
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    validator: validatePassword,
+                    validator: validateEmail,
                     decoration: InputDecoration(
                       hintText: 'Email address',
                       prefixIcon: const Icon(
@@ -235,7 +264,7 @@ class _RegistrationState extends State<Registration> {
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                            color: AppColors.lightBlue, width: 1),
+                            color: Color.fromARGB(255, 10, 11, 11), width: 1),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -283,7 +312,7 @@ class _RegistrationState extends State<Registration> {
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                            color: AppColors.lightBlue, width: 1),
+                            color: Color.fromARGB(255, 10, 11, 11), width: 1),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -324,7 +353,7 @@ class _RegistrationState extends State<Registration> {
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                            color: AppColors.lightBlue, width: 1),
+                            color: Color.fromARGB(255, 10, 11, 11), width: 1),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -338,17 +367,32 @@ class _RegistrationState extends State<Registration> {
                       ),
                     ),
                   ),
+
+                  // Error message display
+                  if (_errorMessage.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: Text(
+                        _errorMessage,
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
                   const SizedBox(height: 30),
                   // Register button
                   SizedBox(
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          // Registration logic
-                        }
-                      },
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              if (_formKey.currentState!.validate()) {
+                                // Registration logic
+                                registerUser();
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryBlue,
                         foregroundColor: Colors.white,
@@ -357,13 +401,22 @@ class _RegistrationState extends State<Registration> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Create Account',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Create Account',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 30),
