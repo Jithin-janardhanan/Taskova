@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:taskova/colors.dart';
 import 'package:taskova/forgot_password.dart';
 import 'package:taskova/logout.dart';
+import 'package:taskova/profile.dart';
 import 'package:taskova/validator.dart';
 import 'applelogi.dart';
 import 'registration.dart';
@@ -119,9 +120,9 @@ class _LoginState extends State<Login> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => HomePage(
-                email: _emailController.text,
-                name: name,
+              builder: (context) => ShopRegistrationPage(
+                // email: _emailController.text,
+                // name: name,
               ),
             ),
           );
