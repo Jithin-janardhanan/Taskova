@@ -172,7 +172,7 @@ class _RegistrationState extends State<Registration> {
           MaterialPageRoute(
             builder: (context) => OtpVerification(email: _emailController.text),
           ),
-        );
+        ); 
       } else {
         // Handle error based on status code
         print("Failed: ${response.statusCode} - ${response.reasonPhrase}");

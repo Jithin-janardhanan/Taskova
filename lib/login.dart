@@ -1,11 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:taskova/colors.dart';
-import 'package:taskova/homepage.dart';
+import 'package:taskova/forgot_password.dart';
+import 'package:taskova/logout.dart';
 import 'package:taskova/validator.dart';
 import 'applelogi.dart';
 import 'registration.dart';
+import 'package:http/http.dart' as http;
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -19,6 +24,7 @@ class _LoginState extends State<Login> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _passwordVisible = false;
+  bool _isLoading = false;
 
   GoogleSignIn _googleSignIn = GoogleSignIn();
 
@@ -39,6 +45,101 @@ class _LoginState extends State<Login> {
       }
     } catch (e) {
       print("Google login failed: $e");
+    }
+  }
+
+  Future<void> saveTokens(String accessToken, String refreshToken, String email,
+      String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('access_token', accessToken);
+    await prefs.setString('refresh_token', refreshToken);
+    await prefs.setString('user_email', email);
+    await prefs.setString('user_name', name);
+  }
+
+  void showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  Future<void> loginUser() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        final response = await http.post(
+          Uri.parse('http://192.168.20.12:8000/api/login/'),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'email': _emailController.text,
+            'password': _passwordController.text,
+          }),
+        );
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (response.statusCode == 200) {
+          // Login successful
+          Map<String, dynamic> responseData = jsonDecode(response.body);
+          print('Login successful: $responseData');
+
+          // Store tokens in SharedPreferences
+          String accessToken = responseData['access'] ?? "";
+          String refreshToken = responseData['refresh'] ?? "";
+          String name = responseData['name'] ?? "User";
+
+          await saveTokens(
+              accessToken, refreshToken, _emailController.text, name);
+
+          showSuccessSnackbar("Login successful!");
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(
+                email: _emailController.text,
+                name: name,
+              ),
+            ),
+          );
+        } else {
+          // Login failed
+          Map<String, dynamic> errorData = jsonDecode(response.body);
+          String errorMessage = errorData['detail'] ??
+              "Login failed. Please check your credentials.";
+          showErrorSnackbar(errorMessage);
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        print("Login error: $e");
+        showErrorSnackbar(
+            "Connection error. Please check your internet connection.");
+      }
     }
   }
 
@@ -168,9 +269,9 @@ class _LoginState extends State<Login> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {
-                        // Handle forgot password
-                      },
+                      onPressed: () => navigateToForgotPasswordScreen(context),
+                      // Handle forgot password
+
                       child: const Text(
                         'Forgot password?',
                         style: TextStyle(
@@ -189,6 +290,7 @@ class _LoginState extends State<Login> {
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           // Handle login logic
+                          loginUser();
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -323,4 +425,11 @@ class _LoginState extends State<Login> {
       ),
     );
   }
+}
+
+void navigateToForgotPasswordScreen(BuildContext context) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+  );
 }
