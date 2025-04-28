@@ -62,7 +62,7 @@ class HomePage extends StatelessWidget {
 
       // Call logout API
       final response = await http.post(
-        Uri.parse('http://192.168.20.12:8000/api/logout/'),
+        Uri.parse('http://192.168.20.10:8000/api/logout/'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $accessToken',

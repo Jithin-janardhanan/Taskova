@@ -60,7 +60,7 @@ class _ShopRegistrationPageState extends State<ShopRegistrationPage> {
       }
       
       // API endpoint
-      final Uri url = Uri.parse('http://192.168.20.12:8000/api/shopkeeper-profile/');
+      final Uri url = Uri.parse('http://192.168.20.10:8000/api/shopkeeper-profile/');
       
       // Request headers
       final headers = {

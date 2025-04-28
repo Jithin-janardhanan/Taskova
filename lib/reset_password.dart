@@ -46,7 +46,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
     try {
       // API endpoint
-      final Uri url = Uri.parse('http://192.168.20.12:8000/api/reset-password/');
+      final Uri url = Uri.parse('http://192.168.20.10:8000/api/reset-password/');
       
       // Request headers
       final headers = {

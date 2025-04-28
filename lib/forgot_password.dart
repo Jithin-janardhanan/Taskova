@@ -31,7 +31,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       // API endpoint
       final Uri url =
-          Uri.parse('http://192.168.20.12:8000/api/forgot-password/');
+          Uri.parse('http://192.168.20.10:8000/api/forgot-password/');
 
       // Request headers
       final headers = {
