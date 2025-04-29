@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:taskova/colors.dart';
-import 'package:taskova/language_provider.dart';
-import 'package:taskova/login.dart';
+
+import 'package:taskova/auth/login.dart';
+
+import 'language_provider.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   const LanguageSelectionScreen({Key? key}) : super(key: key);

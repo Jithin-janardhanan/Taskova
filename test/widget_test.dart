@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:taskova/language_provider.dart';
-import 'package:taskova/language_selection_screen.dart';
-import 'package:taskova/login.dart';
+import 'package:taskova/language/language_provider.dart';
+import 'package:taskova/language/language_selection_screen.dart';
+import 'package:taskova/auth/login.dart';
 import 'package:taskova/main.dart';
 
 void main() {

@@ -125,7 +125,7 @@
 //                 // name: name,
 //               ),
 //             ),
-//           ); 
+//           );
 //         } else {
 //           // Login failed
 //           Map<String, dynamic> errorData = jsonDecode(response.body);
@@ -442,13 +442,13 @@ import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:taskova/colors.dart';
-import 'package:taskova/forgot_password.dart';
-import 'package:taskova/language_provider.dart';
-import 'package:taskova/language_selection_screen.dart';
-import 'package:taskova/logout.dart';
+import 'package:taskova/auth/forgot_password.dart';
+import 'package:taskova/language/language_selection_screen.dart';
+import 'package:taskova/auth/logout.dart';
 import 'package:taskova/profile.dart';
 import 'package:taskova/validator.dart';
 import 'applelogi.dart';
+import '../language/language_provider.dart';
 import 'registration.dart';
 import 'package:http/http.dart' as http;
 
@@ -476,10 +476,10 @@ class _LoginState extends State<Login> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => HomePage(
-              email: user.email,
-              name: user.displayName ?? "No Name",
-            ),
+            builder: (context) => Registration(
+                // email: user.email,
+                // name: user.displayName ?? "No Name",
+                ),
           ),
         );
       }
@@ -534,6 +534,7 @@ class _LoginState extends State<Login> {
           body: jsonEncode({
             'email': _emailController.text,
             'password': _passwordController.text,
+            'remeber_me': true, 
           }),
         );
 
@@ -555,19 +556,21 @@ class _LoginState extends State<Login> {
               accessToken, refreshToken, _emailController.text, name);
 
           final appLanguage = Provider.of<AppLanguage>(context, listen: false);
-          showSuccessSnackbar(await appLanguage.translate("Login successful!", appLanguage.currentLanguage));
+          showSuccessSnackbar(await appLanguage.translate(
+              "Login successful!", appLanguage.currentLanguage));
 
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => ShopRegistrationPage(),
             ),
-          ); 
+          );
         } else {
           // Login failed
           Map<String, dynamic> errorData = jsonDecode(response.body);
-          String errorMessage = errorData['detail'] ?? 
-            Provider.of<AppLanguage>(context, listen: false).get('login_failed');
+          String errorMessage = errorData['detail'] ??
+              Provider.of<AppLanguage>(context, listen: false)
+                  .get('login_failed');
           showErrorSnackbar(errorMessage);
         }
       } catch (e) {
@@ -575,8 +578,8 @@ class _LoginState extends State<Login> {
           _isLoading = false;
         });
         print("Login error: $e");
-        showErrorSnackbar(
-            Provider.of<AppLanguage>(context, listen: false).get('connection_error'));
+        showErrorSnackbar(Provider.of<AppLanguage>(context, listen: false)
+            .get('connection_error'));
       }
     }
   }
@@ -584,7 +587,7 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     final appLanguage = Provider.of<AppLanguage>(context);
-    
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -605,11 +608,13 @@ class _LoginState extends State<Login> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const LanguageSelectionScreen(),
+                            builder: (context) =>
+                                const LanguageSelectionScreen(),
                           ),
                         );
                       },
-                      icon: const Icon(Icons.language, color: AppColors.secondaryBlue),
+                      icon: const Icon(Icons.language,
+                          color: AppColors.secondaryBlue),
                       label: Text(
                         appLanguage.get('change_language'),
                         style: const TextStyle(color: AppColors.secondaryBlue),
@@ -743,13 +748,13 @@ class _LoginState extends State<Login> {
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: _isLoading 
-                        ? null 
-                        : () {
-                          if (_formKey.currentState!.validate()) {
-                            loginUser();
-                          }
-                        },
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              if (_formKey.currentState!.validate()) {
+                                loginUser();
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryBlue,
                         foregroundColor: Colors.white,
@@ -758,15 +763,15 @@ class _LoginState extends State<Login> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: _isLoading 
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                          appLanguage.get('login'),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                              appLanguage.get('login'),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 20),
