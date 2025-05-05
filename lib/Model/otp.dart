@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:taskova/Model/api_config.dart';
 import 'package:taskova/auth/login.dart';
 
 class OtpVerification extends StatefulWidget {
@@ -85,7 +86,7 @@ class _OtpVerificationState extends State<OtpVerification> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.20.10:8000/api/verify-otp/'),
+        Uri.parse(ApiConfig.verifyOtpUrl),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({"email": widget.email, "code": otp}),
       );
@@ -129,7 +130,7 @@ class _OtpVerificationState extends State<OtpVerification> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.20.10:8000/api/resend-otp/'),
+        Uri.parse(ApiConfig.resendOtpUrl),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           "email": widget.email,

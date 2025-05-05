@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:taskova/colors.dart';
+import 'package:taskova/Model/colors.dart';
 
 import 'package:taskova/auth/login.dart';
 

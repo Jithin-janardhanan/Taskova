@@ -2,14 +2,15 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:taskova/Model/api_config.dart';
 
 import 'login.dart';
 
-class HomePage extends StatelessWidget {
+class exit extends StatelessWidget {
   final String email;
   final String name;
 
-  const HomePage({super.key, required this.email, required this.name});
+  const exit({super.key, required this.email, required this.name});
 
   // Show success snackbar
   void showSuccessSnackbar(BuildContext context, String message) {
@@ -62,7 +63,7 @@ class HomePage extends StatelessWidget {
 
       // Call logout API
       final response = await http.post(
-        Uri.parse('http://192.168.20.10:8000/api/logout/'),
+        Uri.parse(ApiConfig.logoutUrl),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $accessToken',

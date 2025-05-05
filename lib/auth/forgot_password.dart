@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:taskova/reset_password.dart';
+import 'package:taskova/Model/api_config.dart';
+import 'package:taskova/view/reset_password.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -31,7 +32,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       // API endpoint
       final Uri url =
-          Uri.parse('http://192.168.20.10:8000/api/forgot-password/');
+          Uri.parse(ApiConfig.forgotPasswordUrl);
 
       // Request headers
       final headers = {

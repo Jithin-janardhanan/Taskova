@@ -1,15 +1,21 @@
 // import 'dart:convert';
-
 // import 'package:flutter/material.dart';
 // import 'package:google_sign_in/google_sign_in.dart';
 // import 'package:lottie/lottie.dart';
+// import 'package:provider/provider.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:taskova/Model/api_config.dart';
+// import 'package:taskova/auth/profile_page.dart';
+// import 'package:taskova/bottom_nav.dart';
 // import 'package:taskova/colors.dart';
-// import 'package:taskova/forgot_password.dart';
-// import 'package:taskova/logout.dart';
+// import 'package:taskova/auth/forgot_password.dart';
+// import 'package:taskova/home.dart';
+// import 'package:taskova/language/language_selection_screen.dart';
+// import 'package:taskova/otp.dart';
 // import 'package:taskova/profile.dart';
 // import 'package:taskova/validator.dart';
 // import 'applelogi.dart';
+// import '../language/language_provider.dart';
 // import 'registration.dart';
 // import 'package:http/http.dart' as http;
 
@@ -37,10 +43,10 @@
 //         Navigator.push(
 //           context,
 //           MaterialPageRoute(
-//             builder: (context) => HomePage(
-//               email: user.email,
-//               name: user.displayName ?? "No Name",
-//             ),
+//             builder: (context) => Registration(
+//                 // email: user.email,
+//                 // name: user.displayName ?? "No Name",
+//                 ),
 //           ),
 //         );
 //       }
@@ -80,72 +86,129 @@
 //     );
 //   }
 
-//   Future<void> loginUser() async {
-//     if (_formKey.currentState!.validate()) {
-//       setState(() {
-//         _isLoading = true;
-//       });
+// Future<void> loginUser() async {
+//   if (_formKey.currentState!.validate()) {
+//     setState(() {
+//       _isLoading = true;
+//     });
 
-//       try {
-//         final response = await http.post(
-//           Uri.parse('http://192.168.20.10:8000/api/login/'),
+//     try {
+//       // 1. First make the login request
+//       final response = await http.post(
+//         Uri.parse(ApiConfig.loginUrl),
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//         body: jsonEncode({
+//           'email': _emailController.text,
+//           'password': _passwordController.text,
+//         }),
+//       );
+
+//       if (response.statusCode == 200) {
+//         // Login successful
+//         Map<String, dynamic> responseData = jsonDecode(response.body);
+//         print('Login successful: $responseData');
+
+//         // Store tokens in SharedPreferences
+//         String accessToken = responseData['access'] ?? "";
+//         String refreshToken = responseData['refresh'] ?? "";
+//         String name = responseData['name'] ?? "User";
+
+//         await saveTokens(accessToken, refreshToken, _emailController.text, name);
+
+//         // 2. Now check profile status
+//         final profileResponse = await http.get(
+//           Uri.parse(ApiConfig.profilestatsUrl),
 //           headers: {
+//             'Authorization': 'Bearer $accessToken',
 //             'Content-Type': 'application/json',
 //           },
-//           body: jsonEncode({
-//             'email': _emailController.text,
-//             'password': _passwordController.text,
-//           }),
 //         );
 
-//         setState(() {
-//           _isLoading = false;
-//         });
+//         if (profileResponse.statusCode == 200) {
+//           final profileData = jsonDecode(profileResponse.body);
+//           bool isProfileComplete = profileData['is_profile_complete'] ?? false;
+//           bool isEmailVerified = profileData['is_email_verified'] ?? false;
+//           print( 'Profile status email: $isEmailVerified +++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+//           // Check if email is verified
 
-//         if (response.statusCode == 200) {
-//           // Login successful
-//           Map<String, dynamic> responseData = jsonDecode(response.body);
-//           print('Login successful: $responseData');
+//           if (!isEmailVerified) {
+//             // Email is not verified, navigate to OTP verification page
+//             showSuccessSnackbar("Please verify your email");
+//             Navigator.push(
+//               context,
+//               MaterialPageRoute(
+//                 builder: (context) => OtpVerification(email: _emailController.text),
+//               ),
+//             );
+//           } else {
+//             // Email is verified, proceed with normal flow
+//             showSuccessSnackbar("Login successful!");
 
-//           // Store tokens in SharedPreferences
-//           String accessToken = responseData['access'] ?? "";
-//           String refreshToken = responseData['refresh'] ?? "";
-//           String name = responseData['name'] ?? "User";
+//             // 3. Navigate based on profile completion status
+//             Navigator.pushReplacement(
+//               context,
+//               MaterialPageRoute(
+//                 builder: (context) => isProfileComplete
+//                     ? HomePageWithBottomNav()
+//                     : ProfileDetailFillingPage(),
+//               ),
+//             );
+//           }
+//         } else {
+//           // Handle profile status check error
+//           showErrorSnackbar("Could not verify profile status");
+//         }
+//       } else {
+//         // Login failed
+//           // Extract 'is_email_verified' from response data
+//           final responseData = jsonDecode(response.body);
+//           bool isEmailVerified = responseData['is_email_verified'] ?? false;
 
-//           await saveTokens(
-//               accessToken, refreshToken, _emailController.text, name);
+//           if (!isEmailVerified) {
+//             // Email is not verified, navigate to OTP verification page
+//             showSuccessSnackbar("Please verify your email");
+//             Navigator.push(
+//               context,
+//               MaterialPageRoute(
+//                 builder: (context) => OtpVerification(email: _emailController.text),
+//               ),
+//             );
+//           }
+//         Map<String, dynamic> errorData = jsonDecode(response.body);
+//         String errorMessage = errorData['detail'] ?? "Login failed. Please check your credentials.";
 
-//           showSuccessSnackbar("Login successful!");
-
-//           Navigator.pushReplacement(
+//         // Check if the error is due to unverified email
+//         if (errorMessage.toLowerCase().contains("email") &&
+//             errorMessage.toLowerCase().contains("verif")) {
+//           // This suggests the error is related to email verification
+//           print("Please verify your email address to login");
+//           Navigator.push(
 //             context,
 //             MaterialPageRoute(
-//               builder: (context) => ShopRegistrationPage(
-//                 // email: _emailController.text,
-//                 // name: name,
-//               ),
+//               builder: (context) => OtpVerification(email: _emailController.text),
 //             ),
 //           );
 //         } else {
-//           // Login failed
-//           Map<String, dynamic> errorData = jsonDecode(response.body);
-//           String errorMessage = errorData['detail'] ??
-//               "Login failed. Please check your credentials.";
 //           showErrorSnackbar(errorMessage);
 //         }
-//       } catch (e) {
-//         setState(() {
-//           _isLoading = false;
-//         });
-//         print("Login error: $e");
-//         showErrorSnackbar(
-//             "Connection error. Please check your internet connection.");
 //       }
+//     } catch (e) {
+//       print("Login error: $e");
+//       showErrorSnackbar("Connection error. Please check your internet connection.");
+//     } finally {
+//       setState(() {
+//         _isLoading = false;
+//       });
 //     }
 //   }
+// }
 
 //   @override
 //   Widget build(BuildContext context) {
+//     final appLanguage = Provider.of<AppLanguage>(context);
+
 //     return Scaffold(
 //       backgroundColor: Colors.white,
 //       body: SafeArea(
@@ -157,17 +220,38 @@
 //               child: Column(
 //                 crossAxisAlignment: CrossAxisAlignment.center,
 //                 children: [
-//                   const SizedBox(height: 60),
+//                   const SizedBox(height: 20),
+//                   // Language switcher button
+//                   Align(
+//                     alignment: Alignment.topRight,
+//                     child: TextButton.icon(
+//                       onPressed: () {
+//                         Navigator.push(
+//                           context,
+//                           MaterialPageRoute(
+//                             builder: (context) =>
+//                                 const LanguageSelectionScreen(),
+//                           ),
+//                         );
+//                       },
+//                       icon: const Icon(Icons.language,
+//                           color: AppColors.secondaryBlue),
+//                       label: Text(
+//                         appLanguage.get('change_language'),
+//                         style: const TextStyle(color: AppColors.secondaryBlue),
+//                       ),
+//                     ),
+//                   ),
+//                   const SizedBox(height: 20),
 //                   // App Logo
 //                   Container(
 //                     height: 100,
 //                     width: 100,
 //                     decoration: BoxDecoration(
-//                       // color: const Color.fromARGB(255, 245, 246, 247),
 //                       borderRadius: BorderRadius.circular(20),
 //                     ),
 //                     child: Lottie.asset(
-//                       'assets/login_lottie.json', // Update with your actual file path
+//                       'assets/login_lottie.json',
 //                       height: 60,
 //                       width: 60,
 //                       fit: BoxFit.contain,
@@ -175,9 +259,9 @@
 //                   ),
 //                   const SizedBox(height: 20),
 //                   // App name
-//                   const Text(
-//                     'Taskova',
-//                     style: TextStyle(
+//                   Text(
+//                     appLanguage.get('app_name'),
+//                     style: const TextStyle(
 //                       fontSize: 28,
 //                       fontWeight: FontWeight.bold,
 //                       color: AppColors.primaryBlue,
@@ -185,9 +269,9 @@
 //                   ),
 //                   const SizedBox(height: 8),
 //                   // Tagline
-//                   const Text(
-//                     'Organize your delivery efficiently',
-//                     style: TextStyle(
+//                   Text(
+//                     appLanguage.get('tagline'),
+//                     style: const TextStyle(
 //                       fontSize: 16,
 //                       color: Colors.grey,
 //                     ),
@@ -199,7 +283,7 @@
 //                     controller: _emailController,
 //                     keyboardType: TextInputType.emailAddress,
 //                     decoration: InputDecoration(
-//                       hintText: 'Email address',
+//                       hintText: appLanguage.get('email_hint'),
 //                       prefixIcon: const Icon(
 //                         Icons.email_outlined,
 //                         color: AppColors.secondaryBlue,
@@ -225,11 +309,10 @@
 //                   const SizedBox(height: 20),
 //                   // Password field
 //                   TextFormField(
-//                     // validator: validatePassword,
 //                     controller: _passwordController,
 //                     obscureText: !_passwordVisible,
 //                     decoration: InputDecoration(
-//                       hintText: 'Password',
+//                       hintText: appLanguage.get('password_hint'),
 //                       prefixIcon: const Icon(
 //                         Icons.lock_outline,
 //                         color: AppColors.secondaryBlue,
@@ -271,11 +354,9 @@
 //                     alignment: Alignment.centerRight,
 //                     child: TextButton(
 //                       onPressed: () => navigateToForgotPasswordScreen(context),
-//                       // Handle forgot password
-
-//                       child: const Text(
-//                         'Forgot password?',
-//                         style: TextStyle(
+//                       child: Text(
+//                         appLanguage.get('forgot_password'),
+//                         style: const TextStyle(
 //                           color: AppColors.secondaryBlue,
 //                           fontWeight: FontWeight.w500,
 //                         ),
@@ -288,12 +369,13 @@
 //                     width: double.infinity,
 //                     height: 55,
 //                     child: ElevatedButton(
-//                       onPressed: () {
-//                         if (_formKey.currentState!.validate()) {
-//                           // Handle login logic
-//                           loginUser();
-//                         }
-//                       },
+//                       onPressed: _isLoading
+//                           ? null
+//                           : () {
+//                               if (_formKey.currentState!.validate()) {
+//                                 loginUser();
+//                               }
+//                             },
 //                       style: ElevatedButton.styleFrom(
 //                         backgroundColor: AppColors.primaryBlue,
 //                         foregroundColor: Colors.white,
@@ -302,13 +384,15 @@
 //                           borderRadius: BorderRadius.circular(12),
 //                         ),
 //                       ),
-//                       child: const Text(
-//                         'Log In',
-//                         style: TextStyle(
-//                           fontSize: 16,
-//                           fontWeight: FontWeight.bold,
-//                         ),
-//                       ),
+//                       child: _isLoading
+//                           ? const CircularProgressIndicator(color: Colors.white)
+//                           : Text(
+//                               appLanguage.get('login'),
+//                               style: const TextStyle(
+//                                 fontSize: 16,
+//                                 fontWeight: FontWeight.bold,
+//                               ),
+//                             ),
 //                     ),
 //                   ),
 //                   const SizedBox(height: 20),
@@ -319,7 +403,7 @@
 //                       Padding(
 //                         padding: const EdgeInsets.symmetric(horizontal: 16),
 //                         child: Text(
-//                           'Or continue with',
+//                           appLanguage.get('or_continue_with'),
 //                           style:
 //                               TextStyle(color: Colors.grey[600], fontSize: 12),
 //                         ),
@@ -336,10 +420,9 @@
 //                       _socialLoginButton(
 //                         onPressed: () {
 //                           googleLogin();
-//                           // Call googleLogin
 //                         },
 //                         icon: Icons.g_mobiledata,
-//                         label: 'Google',
+//                         label: appLanguage.get('google'),
 //                         backgroundColor: Colors.white,
 //                         textColor: Colors.black87,
 //                       ),
@@ -348,10 +431,9 @@
 //                       _socialLoginButton(
 //                         onPressed: () {
 //                           handleAppleSignIn;
-//                           // Call handleAppleSignIn
 //                         },
 //                         icon: Icons.apple,
-//                         label: 'Apple',
+//                         label: appLanguage.get('apple'),
 //                         backgroundColor: Colors.black,
 //                         textColor: Colors.white,
 //                       ),
@@ -363,23 +445,21 @@
 //                     mainAxisAlignment: MainAxisAlignment.center,
 //                     children: [
 //                       Text(
-//                         "Don't have an account? ",
+//                         appLanguage.get('dont_have_account'),
 //                         style: TextStyle(color: Colors.grey[600]),
 //                       ),
 //                       TextButton(
 //                         onPressed: () {
-//                           // Navigate to registration
 //                           Navigator.pushReplacement(
 //                             context,
 //                             MaterialPageRoute(
-//                               builder: (context) =>
-//                                   Registration(), // Replace with your Registration page
+//                               builder: (context) => Registration(),
 //                             ),
 //                           );
 //                         },
-//                         child: const Text(
-//                           'Sign Up',
-//                           style: TextStyle(
+//                         child: Text(
+//                           appLanguage.get('sign_up'),
+//                           style: const TextStyle(
 //                             color: AppColors.primaryBlue,
 //                             fontWeight: FontWeight.bold,
 //                           ),
@@ -435,18 +515,18 @@
 //   );
 // }
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:taskova/colors.dart';
+import 'package:taskova/Model/profile_status.dart';
+import 'package:taskova/auth/profile_page.dart';
+import 'package:taskova/Model/colors.dart';
 import 'package:taskova/auth/forgot_password.dart';
 import 'package:taskova/language/language_selection_screen.dart';
-import 'package:taskova/auth/logout.dart';
-import 'package:taskova/profile.dart';
-import 'package:taskova/validator.dart';
+import 'package:taskova/Model/validator.dart';
+import 'package:taskova/view/home.dart';
 import 'applelogi.dart';
 import '../language/language_provider.dart';
 import 'registration.dart';
@@ -454,7 +534,6 @@ import 'package:http/http.dart' as http;
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
-
   @override
   State<Login> createState() => _LoginState();
 }
@@ -527,14 +606,14 @@ class _LoginState extends State<Login> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://192.168.20.10:8000/api/login/'),
+          Uri.parse('http://192.168.20.5:8000/api/login/'),
           headers: {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
             'email': _emailController.text,
             'password': _passwordController.text,
-            'remeber_me': true, 
+            'remeber_me': true,
           }),
         );
 
@@ -558,13 +637,18 @@ class _LoginState extends State<Login> {
           final appLanguage = Provider.of<AppLanguage>(context, listen: false);
           showSuccessSnackbar(await appLanguage.translate(
               "Login successful!", appLanguage.currentLanguage));
-
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ShopRegistrationPage(),
-            ),
+          await checkProfileStatusAndNavigate(
+            context: context,
+            profileFillingPage: ProfileDetailFillingPage(),
+            homePage:
+                DriverJobPostingPage(), // Replace with your actual home page
           );
+          // Navigator.pushReplacement(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (context) => ProfileDetailFillingPage(),
+          //   ),
+          // );
         } else {
           // Login failed
           Map<String, dynamic> errorData = jsonDecode(response.body);

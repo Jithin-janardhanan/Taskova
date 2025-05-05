@@ -1,9 +1,10 @@
 
 import 'package:flutter/material.dart';
-import 'package:taskova/colors.dart';
-import 'package:taskova/otp.dart';
+import 'package:taskova/Model/api_config.dart';
+import 'package:taskova/Model/colors.dart';
+import 'package:taskova/Model/otp.dart';
 import 'login.dart';
-import '../validator.dart';
+import '../Model/validator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
@@ -38,12 +39,11 @@ class _RegistrationState extends State<Registration> {
 
     // Use your computer's actual IP address on the network
     // For example: "http://192.168.1.5:8000/api/register/"
-    String baseUrl = "http://192.168.20.10:8000/api/register/";
 
     try {
       var response = await http
           .post(
-            Uri.parse(baseUrl),
+            Uri.parse(ApiConfig.registerUrl),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
               "email": _emailController.text,
