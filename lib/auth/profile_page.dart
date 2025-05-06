@@ -722,23 +722,23 @@ class _ProfileDetailFillingPageState extends State<ProfileDetailFillingPage> {
                   const SizedBox(height: 20),
 
                   // Business profile toggle
-                  // SwitchListTile(
-                  //   title: Text(
-                  //     appLanguage.get('include_business_profile'),
-                  //     style: TextStyle(
-                  //       color: AppColors.secondaryBlue,
-                  //       fontWeight: FontWeight.w500,
-                  //     ),
-                  //   ),
-                  //   value: _includeBusinessProfile,
-                  //   onChanged: (bool value) {
-                  //     setState(() {
-                  //       _includeBusinessProfile = value;
-                  //     });
-                  //   },
-                  //   activeColor: AppColors.primaryBlue,
-                  //   contentPadding: EdgeInsets.zero,
-                  // ),
+                  SwitchListTile(
+                    title: Text(
+                      appLanguage.get('include_business_profile'),
+                      style: TextStyle(
+                        color: AppColors.secondaryBlue,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    value: _includeBusinessProfile,
+                    onChanged: (bool value) {
+                      setState(() {
+                        _includeBusinessProfile = value;
+                      });
+                    },
+                    activeColor: AppColors.primaryBlue,
+                    contentPadding: EdgeInsets.zero,
+                  ),
 
                   // Business profile fields (conditionally visible)
                   if (_includeBusinessProfile) ...[

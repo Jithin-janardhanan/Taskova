@@ -15,7 +15,7 @@ class _HomePageWithBottomNavState extends State<HomePageWithBottomNav> {
 
   // List of pages
   final List<Widget> _pages = [
-    DriverJobPostingPage(businessId: 3),
+    DriverJobPostingPage(),
     ProfilePage(),
     // SettingsPage(),
   ];
