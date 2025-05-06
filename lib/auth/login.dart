@@ -520,13 +520,14 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:taskova/Model/api_config.dart';
 import 'package:taskova/Model/profile_status.dart';
 import 'package:taskova/auth/profile_page.dart';
 import 'package:taskova/Model/colors.dart';
 import 'package:taskova/auth/forgot_password.dart';
 import 'package:taskova/language/language_selection_screen.dart';
 import 'package:taskova/Model/validator.dart';
-import 'package:taskova/view/home.dart';
+import 'package:taskova/view/job_post.dart';
 import 'applelogi.dart';
 import '../language/language_provider.dart';
 import 'registration.dart';
@@ -606,7 +607,7 @@ class _LoginState extends State<Login> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://192.168.20.5:8000/api/login/'),
+          Uri.parse(ApiConfig.loginUrl),
           headers: {
             'Content-Type': 'application/json',
           },
@@ -641,7 +642,7 @@ class _LoginState extends State<Login> {
             context: context,
             profileFillingPage: ProfileDetailFillingPage(),
             homePage:
-                DriverJobPostingPage(), // Replace with your actual home page
+                DriverJobPostingPage(businessId: 3), // Replace with your actual home page
           );
           // Navigator.pushReplacement(
           //   context,

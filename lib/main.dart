@@ -9,7 +9,7 @@ import 'package:taskova/auth/login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     // Load environment variables with error handling
     await dotenv.load(fileName: ".env").catchError((error) {
@@ -17,12 +17,16 @@ void main() async {
       throw Exception("Failed to load environment variables");
     });
 
-    // Verify API base URL is loaded
-    final baseUrl = dotenv.env['BASE_URL'];
-    if (baseUrl == null || baseUrl.isEmpty) {
-      throw Exception("BASE_URL not found in .env file");
-    }
-    debugPrint("API Base URL: $baseUrl");
+    // // Verify API base URL is loaded
+    // final baseUrl = dotenv.env['BASE_URL'];
+    // if (baseUrl == null || baseUrl.isEmpty) {
+    //   throw Exception("BASE_URL not found in .env file");
+    // }
+    // debugPrint("API Base URL: $baseUrl");
+   
+
+    // Print for debugging
+    print('Loaded BASE_URL: ${dotenv.env['BASE_URL']}');
 
     // Initialize language provider
     final prefs = await SharedPreferences.getInstance();
@@ -71,7 +75,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final bool hasSelectedLanguage;
-  
+
   const MyApp({
     super.key,
     required this.hasSelectedLanguage,
@@ -86,7 +90,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: hasSelectedLanguage ? const Login() : const LanguageSelectionScreen(),
+      home:
+          hasSelectedLanguage ? const Login() : const LanguageSelectionScreen(),
     );
   }
 }

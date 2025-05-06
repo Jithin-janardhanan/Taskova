@@ -5,16 +5,16 @@ import 'package:translator/translator.dart';
 class AppLanguage extends ChangeNotifier {
   // Instance of translator
   final GoogleTranslator _translator = GoogleTranslator();
-  
+
   // Map to store translations for current language
   Map<String, String> _translations = {};
-  
+
   // Current language code
   String _currentLanguage = 'en';
-  
+
   // Get current language
   String get currentLanguage => _currentLanguage;
-  
+
   // List of supported languages
   final List<Map<String, String>> supportedLanguages = [
     {'code': 'en', 'name': 'English', 'nativeName': 'English'},
@@ -24,7 +24,7 @@ class AppLanguage extends ChangeNotifier {
     {'code': 'ro', 'name': 'Romanian', 'nativeName': 'Română'},
     {'code': 'de', 'name': 'German', 'nativeName': 'Deutsch'},
   ];
-  
+
   // Default strings (English)
   final Map<String, String> _defaultStrings = {
     'app_name': 'Taskova',
@@ -41,32 +41,44 @@ class AppLanguage extends ChangeNotifier {
     'select_language': 'Select your preferred language',
     'continue_text': 'Continue',
     'change_language': 'Change Language',
-    'connection_error': 'Connection error. Please check your internet connection.',
-    'login_failed': 'Login failed. Please check your credentials.'
+    'connection_error':
+        'Connection error. Please check your internet connection.',
+    'login_failed': 'Login failed. Please check your credentials.',
+    "register": "Register",
+    "_email": "Email",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "continue": "Continue",
+    "already_have_account": "Already have an account?",
+    "Log_in": "Login",
+    "join_taskova": "Join taskova",
+    "registration_failed": "Registration failed. Please try again.",
+    "create_an_account": "create an account to get started",
+    "Create_account": "Create account",
   };
-  
+
   // Constructor
   AppLanguage() {
     _translations = Map.from(_defaultStrings);
   }
-  
+
   // Initialize app language from shared preferences
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _currentLanguage = prefs.getString('language_code') ?? 'en';
-    
+
     // If not English, load translations
     if (_currentLanguage != 'en') {
       await translateStrings(_currentLanguage);
     }
-    
+
     notifyListeners();
   }
-  
+
   // Translate a single text
   Future<String> translate(String text, String targetLanguage) async {
     if (targetLanguage == 'en') return text;
-    
+
     try {
       final translation = await _translator.translate(text, to: targetLanguage);
       return translation.text;
@@ -75,17 +87,17 @@ class AppLanguage extends ChangeNotifier {
       return text;
     }
   }
-  
+
   // Translate all strings to target language
   Future<void> translateStrings(String targetLanguage) async {
     if (targetLanguage == 'en') {
       _translations = Map.from(_defaultStrings);
       return;
     }
-    
+
     try {
       Map<String, String> newTranslations = {};
-      
+
       // Translate each string
       for (var entry in _defaultStrings.entries) {
         final translation = await _translator.translate(
@@ -94,7 +106,7 @@ class AppLanguage extends ChangeNotifier {
         );
         newTranslations[entry.key] = translation.text;
       }
-      
+
       _translations = newTranslations;
     } catch (e) {
       print('Translation error: $e');
@@ -102,23 +114,23 @@ class AppLanguage extends ChangeNotifier {
       _translations = Map.from(_defaultStrings);
     }
   }
-  
+
   // Change app language
   Future<void> changeLanguage(String languageCode) async {
     if (_currentLanguage == languageCode) return;
-    
+
     _currentLanguage = languageCode;
-    
+
     // Save to shared preferences
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language_code', languageCode);
-    
+
     // Update translations
     await translateStrings(languageCode);
-    
+
     notifyListeners();
   }
-  
+
   // Get a translated string
   String get(String key) {
     return _translations[key] ?? _defaultStrings[key] ?? key;

@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:taskova/Model/api_config.dart';
 import 'package:taskova/Model/colors.dart';
 import 'package:taskova/Model/otp.dart';
+import 'package:taskova/language/language_provider.dart';
 import 'login.dart';
 import '../Model/validator.dart';
 import 'package:http/http.dart' as http;
@@ -21,6 +22,7 @@ class _RegistrationState extends State<Registration> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final TextEditingController _confirmPass = TextEditingController();
+
   bool _visiblePassword = false;
   bool _isLoading = false;
   String _errorMessage = '';
@@ -32,6 +34,7 @@ class _RegistrationState extends State<Registration> {
   }
 
   Future<void> registerUser() async {
+    final appLanguage = Provider.of<AppLanguage>(context, listen: false);
     setState(() {
       _isLoading = true;
       _errorMessage = '';
@@ -63,21 +66,20 @@ class _RegistrationState extends State<Registration> {
           MaterialPageRoute(
             builder: (context) => OtpVerification(email: _emailController.text),
           ),
-        ); 
+        );
       } else {
         // Handle error based on status code
         print("Failed: ${response.statusCode} - ${response.reasonPhrase}");
         Map<String, dynamic> responseBody = jsonDecode(response.body);
         setState(() {
-          _errorMessage = responseBody['detail'] ??
-              'Registration failed. Please try again.';
+          _errorMessage =
+              responseBody['detail'] ?? appLanguage.get('registration_failed');
         });
       }
     } catch (e) {
       print("Error: $e");
       setState(() {
-        _errorMessage =
-            'Connection error. Please check your internet connection and try again.';
+        _errorMessage = appLanguage.get('connection_error');
       });
     } finally {
       setState(() {
@@ -88,6 +90,7 @@ class _RegistrationState extends State<Registration> {
 
   @override
   Widget build(BuildContext context) {
+    final appLanguage = Provider.of<AppLanguage>(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -116,8 +119,8 @@ class _RegistrationState extends State<Registration> {
                   ),
                   const SizedBox(height: 20),
                   // App name
-                  const Text(
-                    'Join Taskova',
+                  Text(
+                    appLanguage.get('join_taskova'),
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -126,8 +129,8 @@ class _RegistrationState extends State<Registration> {
                   ),
                   const SizedBox(height: 8),
                   // Tagline
-                  const Text(
-                    'Create an account to get started',
+                  Text(
+                    appLanguage.get('create_an_account'),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey,
@@ -141,7 +144,7 @@ class _RegistrationState extends State<Registration> {
                     keyboardType: TextInputType.emailAddress,
                     validator: validateEmail,
                     decoration: InputDecoration(
-                      hintText: 'Email address',
+                      hintText: appLanguage.get('_email'),
                       prefixIcon: const Icon(
                         Icons.email_outlined,
                         color: AppColors.secondaryBlue,
@@ -176,7 +179,7 @@ class _RegistrationState extends State<Registration> {
                     obscureText: !_visiblePassword,
                     validator: validatePassword,
                     decoration: InputDecoration(
-                      hintText: 'Password',
+                      hintText: appLanguage.get('password_hint'),
                       prefixIcon: const Icon(
                         Icons.lock_outline,
                         color: AppColors.secondaryBlue,
@@ -224,13 +227,13 @@ class _RegistrationState extends State<Registration> {
                     obscureText: true,
                     validator: (val) {
                       if (val == null || val.isEmpty)
-                        return 'Confirm password is required';
+                        return appLanguage.get('confirm_password_is_required');
                       if (val != _passwordController.text)
-                        return 'Passwords do not match';
+                        return appLanguage.get('password_do_not_match');
                       return null;
                     },
                     decoration: InputDecoration(
-                      hintText: 'Confirm password',
+                      hintText: appLanguage.get('confirm_password'),
                       prefixIcon: const Icon(
                         Icons.lock_outline,
                         color: AppColors.secondaryBlue,
@@ -301,8 +304,8 @@ class _RegistrationState extends State<Registration> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text(
-                              'Create Account',
+                          : Text(
+                              appLanguage.get('Create_account'),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -316,7 +319,7 @@ class _RegistrationState extends State<Registration> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account? ',
+                        appLanguage.get('Already_have_an_account'),
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                       TextButton(
@@ -328,8 +331,8 @@ class _RegistrationState extends State<Registration> {
                             ),
                           );
                         },
-                        child: const Text(
-                          'Log In',
+                        child: Text(
+                          appLanguage.get('Log_in'),
                           style: TextStyle(
                             color: AppColors.primaryBlue,
                             fontWeight: FontWeight.bold,

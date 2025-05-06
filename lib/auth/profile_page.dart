@@ -386,6 +386,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:taskova/auth/registration.dart';
+import 'package:taskova/view/business_detial_filling.dart';
 import 'package:taskova/view/bottom_nav.dart';
 import 'package:taskova/Model/colors.dart';
 import 'package:taskova/view/profile.dart';
@@ -514,7 +516,7 @@ class _ProfileDetailFillingPageState extends State<ProfileDetailFillingPage> {
           // Navigate to profile page
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => HomePageWithBottomNav()),
+            MaterialPageRoute(builder: (context) => BusinessFormPage()),
           );
         } else {
           final errorResponse = await response.stream.bytesToString();
@@ -720,23 +722,23 @@ class _ProfileDetailFillingPageState extends State<ProfileDetailFillingPage> {
                   const SizedBox(height: 20),
 
                   // Business profile toggle
-                  SwitchListTile(
-                    title: Text(
-                      appLanguage.get('include_business_profile'),
-                      style: TextStyle(
-                        color: AppColors.secondaryBlue,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    value: _includeBusinessProfile,
-                    onChanged: (bool value) {
-                      setState(() {
-                        _includeBusinessProfile = value;
-                      });
-                    },
-                    activeColor: AppColors.primaryBlue,
-                    contentPadding: EdgeInsets.zero,
-                  ),
+                  // SwitchListTile(
+                  //   title: Text(
+                  //     appLanguage.get('include_business_profile'),
+                  //     style: TextStyle(
+                  //       color: AppColors.secondaryBlue,
+                  //       fontWeight: FontWeight.w500,
+                  //     ),
+                  //   ),
+                  //   value: _includeBusinessProfile,
+                  //   onChanged: (bool value) {
+                  //     setState(() {
+                  //       _includeBusinessProfile = value;
+                  //     });
+                  //   },
+                  //   activeColor: AppColors.primaryBlue,
+                  //   contentPadding: EdgeInsets.zero,
+                  // ),
 
                   // Business profile fields (conditionally visible)
                   if (_includeBusinessProfile) ...[
@@ -856,7 +858,8 @@ class _ProfileDetailFillingPageState extends State<ProfileDetailFillingPage> {
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => ProfilePage()),
+                        MaterialPageRoute(
+                            builder: (context) => HomePageWithBottomNav()),
                       );
                     },
                     child: Text(
