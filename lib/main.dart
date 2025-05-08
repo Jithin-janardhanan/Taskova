@@ -17,14 +17,8 @@ void main() async {
       throw Exception("Failed to load environment variables");
     });
 
-    // // Verify API base URL is loaded
-    // final baseUrl = dotenv.env['BASE_URL'];
-    // if (baseUrl == null || baseUrl.isEmpty) {
-    //   throw Exception("BASE_URL not found in .env file");
-    // }
-    // debugPrint("API Base URL: $baseUrl");
    
-
+  
     // Print for debugging
     print('Loaded BASE_URL: ${dotenv.env['BASE_URL']}');
 

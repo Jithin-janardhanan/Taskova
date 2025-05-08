@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:taskova/auth/logout.dart';
+import 'package:taskova/view/dashboard.dart';
 import 'package:taskova/view/job_post.dart';
 import 'package:taskova/view/profile.dart';
 
@@ -15,7 +16,7 @@ class _HomePageWithBottomNavState extends State<HomePageWithBottomNav> {
 
   // List of pages
   final List<Widget> _pages = [
-    DriverJobPostingPage(),
+    Dashboard(),
     ProfilePage(),
     // SettingsPage(),
   ];

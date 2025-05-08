@@ -77,4 +77,9 @@ class ApiConfig {
   static String get driverDocumentUrl => '$baseUrl/api/driver-documents/';
   static String get shopkeeperProfileUrl => '$baseUrl/api/shopkeeper/profile/';
   static String get profileStatusUrl => '$baseUrl/api/profile-status/';
+
+  // Business endpoints
+  static String get businesses => '$baseUrl/api/shopkeeper/businesses/';
+  static String get jobposts => '$baseUrl/api/job-posts';
+
 }

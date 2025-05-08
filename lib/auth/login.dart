@@ -12,7 +12,7 @@ import 'package:taskova/auth/forgot_password.dart';
 import 'package:taskova/language/language_selection_screen.dart';
 import 'package:taskova/Model/validator.dart';
 import 'package:taskova/view/bottom_nav.dart';
-import 'package:taskova/view/job_post.dart';
+
 import 'applelogi.dart';
 import '../language/language_provider.dart';
 import 'registration.dart';
