@@ -4,11 +4,11 @@
 //   static String get baseUrl {
 //     return dotenv.env['BASE_URL'] ?? 'http://default-fallback-url.com';
 //   }
-  
+
 //   static String get forgotPasswordUrl {
 //     return '$baseUrl/api/forgot-password/';
 //   }
-  
+
 //   static String get loginUrl {
 //     return '$baseUrl/api/login/';
 //   }
@@ -44,7 +44,7 @@
 //   static String get profilestatsUrl {
 //     return '$baseUrl/api/profile-status/';
 //   }
-  
+
 // }
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -58,20 +58,20 @@ class ApiConfig {
     // Ensure URL doesn't have trailing slash to avoid double slashes
     return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
   }
-  
+
   // Authentication endpoints
   static String get loginUrl => '$baseUrl/api/login/';
   static String get registerUrl => '$baseUrl/api/register/';
   static String get logoutUrl => '$baseUrl/api/logout/';
-  
+
   // Password management endpoints
   static String get forgotPasswordUrl => '$baseUrl/api/forgot-password/';
   static String get resetPasswordUrl => '$baseUrl/api/reset-password/';
-  
+
   // OTP endpoints
   static String get verifyOtpUrl => '$baseUrl/api/verify-otp/';
   static String get resendOtpUrl => '$baseUrl/api/resend-otp/';
-  
+
   // Profile endpoints
   static String get driverProfileUrl => '$baseUrl/api/driver-profile/';
   static String get driverDocumentUrl => '$baseUrl/api/driver-documents/';
@@ -80,6 +80,5 @@ class ApiConfig {
 
   // Business endpoints
   static String get businesses => '$baseUrl/api/shopkeeper/businesses/';
-  static String get jobposts => '$baseUrl/api/job-posts';
-
+  static String get jobposts => '$baseUrl/api/job-posts/create/';
 }

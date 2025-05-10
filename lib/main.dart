@@ -1,15 +1,20 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:taskova/checking.dart';
+import 'package:taskova/firebase_options.dart';
 import 'package:taskova/language/language_provider.dart';
 import 'package:taskova/language/language_selection_screen.dart';
 import 'package:taskova/auth/login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  // await Firebase.initializeApp(
+  //   options: DefaultFirebaseOptions
+  //       .currentPlatform, // Use config from firebase_options.dart
+  // );
   try {
     // Load environment variables with error handling
     await dotenv.load(fileName: ".env").catchError((error) {
@@ -17,8 +22,6 @@ void main() async {
       throw Exception("Failed to load environment variables");
     });
 
-   
-  
     // Print for debugging
     print('Loaded BASE_URL: ${dotenv.env['BASE_URL']}');
 
@@ -84,8 +87,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home:
-          hasSelectedLanguage ? const Login() : const LanguageSelectionScreen(),
+      home: hasSelectedLanguage ? Login() : const LanguageSelectionScreen(),
+      // home: TestScreen(),
     );
   }
 }

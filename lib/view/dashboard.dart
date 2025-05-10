@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:taskova/view/business_detial_filling.dart';
 import 'package:taskova/view/instant_job_post.dart';
 import 'package:taskova/view/job_post.dart';
 
@@ -54,7 +55,11 @@ class _DashboardState extends State<Dashboard> {
           actions: [
             IconButton(
               icon: Icon(Icons.person),
-              onPressed: () {},
+              onPressed: () {
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (context) => BusinessFormPage()),
+  );
+},
             ),
           ],
         ),

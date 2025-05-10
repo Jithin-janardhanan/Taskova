@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "541546114635",
+    "project_id": "taskova-aa5d2",
+    "storage_bucket": "taskova-aa5d2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:541546114635:android:69622f72b75f32bd7667ce",
+        "android_client_info": {
+          "package_name": "com.example.taskova"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "541546114635-3rs18lrj0m2lsm7fvgrgso6g94qbq2s8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbXmrr7sT2lTu7t5vxZRr8YuGKBXaTsyA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "541546114635-3rs18lrj0m2lsm7fvgrgso6g94qbq2s8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "541546114635-vkuac0fhgao0hft0sc4eau8jo75290fa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.taskova"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -47,12 +47,12 @@ class _HomePageWithBottomNavState extends State<HomePageWithBottomNav> {
             icon: Icon(Icons.person),
             label: 'Profile',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.settings),
+          //   label: 'Settings',
+          // ),
         ],
-      ),
+      ), 
     );
   }
 }
