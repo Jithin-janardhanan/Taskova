@@ -22,9 +22,9 @@
 //   String? _accessToken;
 //   String? _errorMessage;
 //   bool _isEditing = false;
-  
+
 //   final TextEditingController _nameController = TextEditingController();
-  
+
 //   @override
 //   void initState() {
 //     super.initState();
@@ -166,11 +166,11 @@
 //           _isLoading = false;
 //           _isEditing = false;
 //         });
-        
+
 //         // Update stored name
 //         final prefs = await SharedPreferences.getInstance();
 //         await prefs.setString('user_name', _name);
-        
+
 //         ScaffoldMessenger.of(context).showSnackBar(
 //           const SnackBar(content: Text('Profile updated successfully')),
 //         );
@@ -665,6 +665,7 @@ import 'package:taskova/Model/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'package:taskova/auth/login.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:taskova/auth/logout.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -682,7 +683,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _errorMessage;
   bool _isEditingName = false;
   final TextEditingController _nameController = TextEditingController();
-  
+
   // Additional user info
   String _joinDate = 'April 2025';
   int _tasksCompleted = 0;
@@ -706,21 +707,21 @@ class _ProfilePageState extends State<ProfilePage> {
         _isLoading = true;
         _errorMessage = null;
       });
-      
+
       final prefs = await SharedPreferences.getInstance();
       _accessToken = prefs.getString('access_token');
-      
+
       if (_accessToken == null) {
         // If no token found, just load data from sharedPreferences
         _name = prefs.getString('user_name') ?? 'User';
         _email = prefs.getString('user_email') ?? '';
-        
+
         setState(() {
           _isLoading = false;
         });
         return;
       }
-      
+
       // Try to fetch user data from API
       final response = await http.get(
         Uri.parse('${ApiConfig.baseUrl}/api/user/profile/'),
@@ -729,10 +730,10 @@ class _ProfilePageState extends State<ProfilePage> {
           'Content-Type': 'application/json',
         },
       ).timeout(const Duration(seconds: 10));
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        
+
         setState(() {
           _name = data['name'] ?? prefs.getString('user_name') ?? 'User';
           _email = data['email'] ?? prefs.getString('user_email') ?? '';
@@ -742,11 +743,11 @@ class _ProfilePageState extends State<ProfilePage> {
           if (data['join_date'] != null) {
             _joinDate = data['join_date'];
           }
-          
+
           _nameController.text = _name;
           _isLoading = false;
         });
-        
+
         // Update stored values
         await prefs.setString('user_name', _name);
         await prefs.setString('user_email', _email);
@@ -791,17 +792,17 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final refreshToken = prefs.getString('refresh_token');
-      
+
       if (refreshToken == null) {
         return false;
       }
-      
+
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}/api/token/refresh/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refresh': refreshToken}),
       );
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _accessToken = data['access'];
@@ -817,29 +818,30 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _updateProfile() async {
     if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Name cannot be empty'))
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Name cannot be empty')));
       return;
     }
-    
+
     try {
       setState(() => _isLoading = true);
-      
+
       // First try to update on server if we have token
       if (_accessToken != null) {
         try {
-          final response = await http.patch(
-            Uri.parse('${ApiConfig.baseUrl}/api/user/profile/update/'),
-            headers: {
-              'Authorization': 'Bearer $_accessToken',
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode({
-              'name': _nameController.text,
-            }),
-          ).timeout(const Duration(seconds: 10));
-          
+          final response = await http
+              .patch(
+                Uri.parse('${ApiConfig.baseUrl}/api/user/profile/update/'),
+                headers: {
+                  'Authorization': 'Bearer $_accessToken',
+                  'Content-Type': 'application/json',
+                },
+                body: jsonEncode({
+                  'name': _nameController.text,
+                }),
+              )
+              .timeout(const Duration(seconds: 10));
+
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
             _name = data['name'] ?? _nameController.text;
@@ -856,24 +858,23 @@ class _ProfilePageState extends State<ProfilePage> {
           print("API update failed: $e");
         }
       }
-      
+
       // Always update locally regardless of API result
       _name = _nameController.text;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_name', _name);
-      
+
       setState(() {
         _isEditingName = false;
         _isLoading = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profile updated'),
           backgroundColor: AppColors.secondaryBlue,
         ),
       );
-      
     } catch (e) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -907,16 +908,16 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
       ),
     );
-    
+
     if (confirm != true) return;
-    
+
     // Perform logout
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');
     await prefs.remove('refresh_token');
-    
+
     // Keep email and name for convenience on next login
-    
+
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const Login()),
       (route) => false,
@@ -927,13 +928,14 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-      
+
       if (pickedFile != null) {
         // Here you would upload the image to your server
         // For now we just show a success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Profile image selected. Upload feature coming soon!'),
+            content:
+                Text('Profile image selected. Upload feature coming soon!'),
             backgroundColor: AppColors.secondaryBlue,
           ),
         );
@@ -965,7 +967,9 @@ class _ProfilePageState extends State<ProfilePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.secondaryBlue),
-            onPressed: _logout,
+            onPressed: () {
+              LogoutService().logout(context);
+            },
           ),
         ],
       ),
@@ -990,12 +994,14 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.info_outline, color: Colors.amber),
+                              const Icon(Icons.info_outline,
+                                  color: Colors.amber),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   _errorMessage!,
-                                  style: TextStyle(color: Colors.amber.shade900),
+                                  style:
+                                      TextStyle(color: Colors.amber.shade900),
                                 ),
                               ),
                               IconButton(
@@ -1075,7 +1081,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Name (editable)
           if (_isEditingName)
             Row(
@@ -1087,7 +1093,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     textAlign: TextAlign.center,
                     decoration: const InputDecoration(
                       hintText: 'Enter your name',
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       border: OutlineInputBorder(),
                       isDense: true,
                     ),
@@ -1195,11 +1202,8 @@ class _ProfilePageState extends State<ProfilePage> {
           const VerticalDivider(thickness: 1),
           _buildStatItem(Icons.task_alt, '$_tasksCompleted', 'Tasks'),
           const VerticalDivider(thickness: 1),
-          _buildStatItem(
-            Icons.verified_user,
-            _emailVerified ? 'Verified' : 'Pending',
-            'Status'
-          ),
+          _buildStatItem(Icons.verified_user,
+              _emailVerified ? 'Verified' : 'Pending', 'Status'),
         ],
       ),
     );
@@ -1370,7 +1374,8 @@ class _ProfilePageState extends State<ProfilePage> {
             'Update your account password',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Change password feature coming soon')),
+                const SnackBar(
+                    content: Text('Change password feature coming soon')),
               );
             },
           ),
@@ -1380,7 +1385,8 @@ class _ProfilePageState extends State<ProfilePage> {
             'Manage your notification preferences',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notification settings coming soon')),
+                const SnackBar(
+                    content: Text('Notification settings coming soon')),
               );
             },
           ),

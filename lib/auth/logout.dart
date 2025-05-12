@@ -3,17 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:taskova/Model/api_config.dart';
+import 'package:lottie/lottie.dart';
 
 import 'login.dart';
 
-class exit extends StatelessWidget {
-  final String email;
-  final String name;
+class LogoutService {
+  // Singleton pattern
+  static final LogoutService _instance = LogoutService._internal();
 
-  const exit({super.key, required this.email, required this.name});
+  factory LogoutService() {
+    return _instance;
+  }
+
+  LogoutService._internal();
 
   // Show success snackbar
-  void showSuccessSnackbar(BuildContext context, String message) {
+  void _showSuccessSnackbar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -25,7 +30,7 @@ class exit extends StatelessWidget {
   }
 
   // Show error snackbar
-  void showErrorSnackbar(BuildContext context, String message) {
+  void _showErrorSnackbar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -36,25 +41,97 @@ class exit extends StatelessWidget {
     );
   }
 
+  // Show confirmation dialog with Lottie animation
+  Future<bool> _showLogoutConfirmationDialog(
+    BuildContext context, {
+    String imagePath = 'assets/logout.png',
+  }) async {
+    bool confirmLogout = false;
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Logout'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 120,
+                width: 120,
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              SizedBox(height: 16),
+              Text('Are you sure you want to logout?'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                confirmLogout = false;
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                confirmLogout = true;
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                foregroundColor: Colors.white,
+              ),
+              child: Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmLogout;
+  }
+
+  // Show loading dialog
+  void _showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text("Logging out..."),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   // Logout function that calls the API
-  Future<void> logout(BuildContext context) async {
+  Future<void> logout(
+    BuildContext context, {
+    String imagePath = 'assets/logout.png',
+  }) async {
+    // First show confirmation dialog
+    bool confirmLogout = await _showLogoutConfirmationDialog(
+      context,
+      imagePath: imagePath,
+    );
+
+    if (!confirmLogout) {
+      return; // User cancelled the logout
+    }
+
     try {
       // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            content: Row(
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 20),
-                Text("Logging out..."),
-              ],
-            ),
-          );
-        },
-      );
+      _showLoadingDialog(context);
 
       // Get tokens from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
@@ -92,7 +169,7 @@ class exit extends StatelessWidget {
         print("Logged out successfully from server: $successMessage");
 
         // Show success snackbar
-        showSuccessSnackbar(context, successMessage);
+        _showSuccessSnackbar(context, successMessage);
 
         // Clear stored tokens
         await prefs.remove('access_token');
@@ -121,7 +198,7 @@ class exit extends StatelessWidget {
 
         String errorMessage =
             errorData['detail'] ?? "Logout failed. Please try again.";
-        showErrorSnackbar(context, errorMessage);
+        _showErrorSnackbar(context, errorMessage);
 
         // We'll still clear tokens and redirect to login page even if the API call fails
         await prefs.remove('access_token');
@@ -147,7 +224,7 @@ class exit extends StatelessWidget {
       print("Error during logout: $e");
 
       // Show error message
-      showErrorSnackbar(context, "Logout failed. Please try again.");
+      _showErrorSnackbar(context, "Logout failed. Please try again.");
 
       // Try to clear tokens locally anyway
       try {
@@ -169,37 +246,5 @@ class exit extends StatelessWidget {
         print("Error clearing SharedPreferences: $e");
       }
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Home Page")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("Welcome!", style: TextStyle(fontSize: 24)),
-            SizedBox(height: 10),
-            Text("Name: $name", style: TextStyle(fontSize: 18)),
-            Text("Email: $email", style: TextStyle(fontSize: 18)),
-            SizedBox(height: 100),
-            ElevatedButton(
-              onPressed: () => logout(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade700,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text("Logout"),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

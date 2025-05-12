@@ -86,6 +86,7 @@ flutter:
       - assets/login_lottie.json
       - assets/success.json
       - assets/loader.json
+      - assets/logout.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

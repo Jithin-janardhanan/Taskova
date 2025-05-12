@@ -1,60 +1,132 @@
-
-import 'dart:developer';
-
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:taskova/Model/api_config.dart';
+import 'package:taskova/Model/profile_status.dart';
+import 'package:taskova/auth/profile_page.dart';
+import 'package:taskova/auth/registration.dart';
+import 'package:taskova/view/bottom_nav.dart';
+import 'package:provider/provider.dart';
+import '../language/language_provider.dart';
 
-Future<UserCredential?> signInWithGoogle() async {
-  try {
-    // Configure Google Sign-In for Android
-    final GoogleSignIn googleSignIn = GoogleSignIn(
-      scopes: ['email', 'profile'],
-      // No need to specify clientId for Android - it uses google-services.json
-    );
+class GoogleAuthService {
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  
+  // This function handles the Google sign-in flow
+  Future<void> signInWithGoogle({
+    required BuildContext context,
+    required Function(String) showSuccessSnackbar,
+    required Function(String) showErrorSnackbar,
+    required Function(bool) setLoadingState,
+  }) async {
+    setLoadingState(true);
 
-    // Start the sign-in process
-    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-    if (googleUser == null) return null; // User cancelled
+    try {
+      // Sign out first to ensure the account picker shows every time
+      await _googleSignIn.signOut();
 
-    // Get authentication details
-    final GoogleSignInAuthentication googleAuth =
-        await googleUser.authentication;
+      // Trigger the authentication flow with account selection
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
-    // Create Firebase credential
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
+      if (googleUser == null) {
+        // User canceled the sign-in process
+        setLoadingState(false);
+        return;
+      }
 
-    // Sign in to Firebase
-    final UserCredential userCredential =
-        await FirebaseAuth.instance.signInWithCredential(credential);
+      // Get authentication token
+      final GoogleSignInAuthentication googleAuth = 
+          await googleUser.authentication;
+      final String? idToken = googleAuth.idToken;
 
-    print('Signed in: ${userCredential.user?.displayName}');
-    log('$userCredential', name: 'jithin');
-    return userCredential;
-  } catch (e) {
-    print('Error during Google Sign-In: $e');
-    // Log more detailed error information
-    if (e is FirebaseAuthException) {
-      print('Firebase Auth Error Code: ${e.code}');
-      print('Firebase Auth Error Message: ${e.message}');
+      if (idToken == null) {
+        setLoadingState(false);
+        showErrorSnackbar(Provider.of<AppLanguage>(context, listen: false)
+            .get('authentication_failed'));
+        return;
+      }
+
+      // Send the token to your backend
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/social_auth/google/'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'auth_token': idToken,
+        }),
+      );
+
+      setLoadingState(false);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Authentication successful
+        Map<String, dynamic> responseData = jsonDecode(response.body);
+        print("Google login response: $responseData"); // Log response
+
+        // Extract tokens from nested auth_token.tokens
+        String accessToken = 
+            responseData['auth_token']?['tokens']?['access'] ?? "";
+        String refreshToken = 
+            responseData['auth_token']?['tokens']?['refresh'] ?? "";
+        String name = responseData['auth_token']?['username'] ?? 
+            googleUser.displayName ?? 
+            "User";
+        bool isNewUser = responseData['is_new_user'] ?? false;
+
+        await _saveTokens(accessToken, refreshToken, googleUser.email, name);
+
+        final appLanguage = Provider.of<AppLanguage>(context, listen: false);
+        showSuccessSnackbar(await appLanguage.translate(
+            "Google login successful!", appLanguage.currentLanguage));
+
+        if (isNewUser) {
+          // If email is not already registered, navigate to registration
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => Registration()),
+            (Route<dynamic> route) => false,
+          );
+        } else {
+          // If email is already registered, check profile status and navigate
+          await checkProfileStatusAndNavigate(
+            context: context,
+            profileFillingPage: ProfileDetailFillingPage(),
+            homePage: HomePageWithBottomNav(),
+          );
+        }
+      } else {
+        // Authentication failed
+        Map<String, dynamic> errorData = jsonDecode(response.body);
+        String errorMessage = errorData['detail'] ??
+            Provider.of<AppLanguage>(context, listen: false)
+                .get('login_failed');
+        showErrorSnackbar(errorMessage);
+      }
+    } catch (e) {
+      setLoadingState(false);
+      print("Google login error: $e");
+      showErrorSnackbar(Provider.of<AppLanguage>(context, listen: false)
+          .get('connection_error'));
     }
-    rethrow; // Rethrow to handle the error in the UI layer
   }
-}
 
-// For backend communication, use this separate function
-Future<String?> getFirebaseIdToken() async {
-  try {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) return null;
-
-    // Force refresh the token to ensure it's valid
-    return await user.getIdToken(true);
-  } catch (e) {
-    print('Error getting Firebase ID token: $e');
-    return null;
+  // Helper method to save authentication tokens
+  Future<void> _saveTokens(String accessToken, String refreshToken, String email,
+      String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (accessToken.isEmpty || refreshToken.isEmpty) {
+      print("Error: Attempting to save empty tokens");
+      return;
+    }
+    print(
+        "Saving tokens: access_token=$accessToken, refresh_token=$refreshToken, email=$email, name=$name");
+    await prefs.setString('access_token', accessToken);
+    await prefs.setString('refresh_token', refreshToken);
+    await prefs.setString('user_email', email);
+    await prefs.setString('user_name', name);
+    print("Saved access_token: ${prefs.getString('access_token')}");
   }
 }
