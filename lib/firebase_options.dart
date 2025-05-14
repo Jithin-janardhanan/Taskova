@@ -63,8 +63,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '541546114635',
     projectId: 'taskova-aa5d2',
     storageBucket: 'taskova-aa5d2.firebasestorage.app',
-    androidClientId: '541546114635-n0dmsk5b2742k0qiju0er78qcl5b239g.apps.googleusercontent.com',
-    iosClientId: '541546114635-vkuac0fhgao0hft0sc4eau8jo75290fa.apps.googleusercontent.com',
+    androidClientId:
+        '541546114635-n0dmsk5b2742k0qiju0er78qcl5b239g.apps.googleusercontent.com',
+    iosClientId:
+        '541546114635-vkuac0fhgao0hft0sc4eau8jo75290fa.apps.googleusercontent.com',
     iosBundleId: 'com.example.taskova',
   );
 
@@ -74,8 +76,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '541546114635',
     projectId: 'taskova-aa5d2',
     storageBucket: 'taskova-aa5d2.firebasestorage.app',
-    androidClientId: '541546114635-n0dmsk5b2742k0qiju0er78qcl5b239g.apps.googleusercontent.com',
-    iosClientId: '541546114635-vkuac0fhgao0hft0sc4eau8jo75290fa.apps.googleusercontent.com',
+    androidClientId:
+        '541546114635-n0dmsk5b2742k0qiju0er78qcl5b239g.apps.googleusercontent.com',
+    iosClientId:
+        '541546114635-vkuac0fhgao0hft0sc4eau8jo75290fa.apps.googleusercontent.com',
     iosBundleId: 'com.example.taskova',
   );
 
@@ -87,5 +91,4 @@ class DefaultFirebaseOptions {
     authDomain: 'taskova-aa5d2.firebaseapp.com',
     storageBucket: 'taskova-aa5d2.firebasestorage.app',
   );
-
 }

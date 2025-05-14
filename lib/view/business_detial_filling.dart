@@ -661,12 +661,14 @@
 // }
 //-------------------------------------------------------------------------
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:taskova/Model/api_config.dart';
 import 'package:taskova/Model/colors.dart';
 import 'package:taskova/view/bottom_nav.dart';
 import 'package:http/http.dart' as http;
@@ -890,18 +892,40 @@ class _BusinessFormPageState extends State<BusinessFormPage> {
   }
 
   Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        setState(() {
-          _businessImage = File(image.path);
-        });
+  try {
+    final XFile? pickedImage = await _picker.pickImage(
+      source: ImageSource.gallery,
+      // Optional: Add image quality compression to reduce file size
+      imageQuality: 85, // 0-100, where 100 is best quality
+      maxWidth: 800,    // Reasonable width for a business logo/image
+    );
+    
+    if (pickedImage != null) {
+      print("Image picked: ${pickedImage.path}");
+      print("Image name: ${pickedImage.name}");
+      
+      final File imageFile = File(pickedImage.path);
+      
+      // Get file information
+      final fileSize = await imageFile.length();
+      print("Selected image size: ${fileSize / 1024} KB");
+      
+      setState(() {
+        _businessImage = imageFile;
+      });
+      
+      // Check if file is large and may need compression
+      if (fileSize > 2 * 1024 * 1024) { // If over 2MB
+        _showSnackbar("Selected image is large (${(fileSize / 1024 / 1024).toStringAsFixed(1)}MB). This might cause slower uploads.", false);
       }
-    } catch (e) {
-      print("Error picking image: $e");
+    } else {
+      print("No image selected");
     }
+  } catch (e) {
+    print("Error picking image: $e");
+    _showSnackbar("Error selecting image: $e", true);
   }
-
+}
   void _showSnackbar(String message, bool isError) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -913,90 +937,216 @@ class _BusinessFormPageState extends State<BusinessFormPage> {
     );
   }
 
+  
+  Future<bool> _verifyImageFile() async {
+  if (_businessImage == null) {
+    print("No image selected");
+    return false;
+  }
+
+  try {
+    // Check if the file exists
+    final exists = await _businessImage!.exists();
+    if (!exists) {
+      print("Image file doesn't exist at path: ${_businessImage!.path}");
+      return false;
+    }
+
+    // Check file size
+    final fileSize = await _businessImage!.length();
+    print("Image file size: ${fileSize} bytes");
+    
+    // Check if file is too large (e.g., >5MB)
+    if (fileSize > 5 * 1024 * 1024) {
+      print("Image file is too large: ${fileSize / 1024 / 1024} MB");
+      _showSnackbar("Image is too large. Please select an image under 5MB.", true);
+      return false;
+    }
+
+    // Verify it's actually an image file
+    final fileExtension = _businessImage!.path.split('.').last.toLowerCase();
+    final validExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+    
+    if (!validExtensions.contains(fileExtension)) {
+      print("Invalid image file extension: $fileExtension");
+      _showSnackbar("Please select a valid image file (JPG, PNG, GIF)", true);
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    print("Error verifying image file: $e");
+    return false;
+  }
+}
   Future<void> _submitBusinessDetails() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      try {
-        var headers = {
-          'Authorization': 'Bearer $_accessToken',
-        };
-
-        var request = http.MultipartRequest('POST',
-            Uri.parse('http://192.168.20.15:8000/api/shopkeeper/businesses/'));
-
-        request.fields.addAll({
-          'business[name]': _businessNameController.text,
-          'business[address]': _businessAddressController.text,
-          'business[email]': _emailController.text,
-          'business[contact_number]': _contactNumberController.text,
-          'business[latitude]': _latitudeController.text,
-          'business[longitude]': _longitudeController.text,
-          'business[postcode]': _postcodeController.text,
-          'business[is_active]': _isActive.toString(),
-          'business[user]': _userId ?? '',
-        });
-
-        if (_businessImage != null) {
-          request.files.add(await http.MultipartFile.fromPath(
-              'business[image]', _businessImage!.path));
-        }
-
-        request.headers.addAll(headers);
-
-        final appLanguage = Provider.of<AppLanguage>(context, listen: false);
-
-        http.StreamedResponse response = await request.send();
-
-        setState(() {
-          _isLoading = false;
-        });
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          final responseBody = await response.stream.bytesToString();
-          print('Business profile created: $responseBody');
-
-          // Show success message
-          _showSnackbar(
-              await appLanguage.translate(
-                  "Business profile created successfully!",
-                  appLanguage.currentLanguage),
-              false);
-
-          // Navigate to bottom navigation
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePageWithBottomNav()),
-          );
-        } else {
-          final errorResponse = await response.stream.bytesToString();
-          print(
-              'Business profile creation failed: ${response.reasonPhrase}, $errorResponse');
-
-          // Show error message
-          _showSnackbar(
-              await appLanguage.translate(
-                  "Failed to create business profile. Please try again.",
-                  appLanguage.currentLanguage),
-              true);
-        }
-      } catch (e) {
-        setState(() {
-          _isLoading = false;
-        });
-        print("Business profile creation error: $e");
-
-        final appLanguage = Provider.of<AppLanguage>(context, listen: false);
-        _showSnackbar(
-            await appLanguage.translate(
-                "Connection error. Please check your internet connection.",
-                appLanguage.currentLanguage),
-            true);
+  if (_formKey.currentState!.validate()) {
+    // Verify image if one is selected
+    if (_businessImage != null) {
+      final imageValid = await _verifyImageFile();
+      if (!imageValid) {
+        _showSnackbar("Unable to process the selected image. Please try another image.", true);
+        return;
       }
     }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      var headers = {
+        'Authorization': 'Bearer $_accessToken',
+        // Adding content type header might help with multipart request
+        'Content-Type': 'multipart/form-data',
+      };
+
+      final apiUrl = ApiConfig.regiserBusiness;
+      print("Sending request to: $apiUrl");
+      
+      var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
+
+      request.fields.addAll({
+        'business[name]': _businessNameController.text,
+        'business[address]': _businessAddressController.text,
+        'business[email]': _emailController.text,
+        'business[contact_number]': _contactNumberController.text,
+        'business[latitude]': _latitudeController.text,
+        'business[longitude]': _longitudeController.text,
+        'business[postcode]': _postcodeController.text,
+        'business[is_active]': _isActive.toString(),
+        'business[user]': _userId ?? '',
+      });
+
+      // Log the request fields
+      print("Request fields:");
+      request.fields.forEach((key, value) {
+        print("$key: $value");
+      });
+
+      // Handle the image upload with more robust error handling
+      if (_businessImage != null) {
+        try {
+          final imageField = 'business[image]';
+          final imagePath = _businessImage!.path;
+          
+          print("Adding image to request:");
+          print("Field name: $imageField");
+          print("File path: $imagePath");
+          
+          final imageFile = await http.MultipartFile.fromPath(
+            imageField, 
+            imagePath,
+            // You can also specify the content type
+            // contentType: MediaType('image', 'jpeg'),
+          );
+          
+          print("Image file prepared: ${imageFile.length} bytes");
+          request.files.add(imageFile);
+          
+          // Double-check that the file was added
+          print("Files in request: ${request.files.length}");
+          for (var file in request.files) {
+            print(" - ${file.field}: ${file.filename}, ${file.length} bytes");
+          }
+        } catch (imageError) {
+          print("Error preparing image file: $imageError");
+          // Continue without image if there's an error
+          _showSnackbar("Warning: Unable to attach image. Continuing without image.", true);
+        }
+      }
+
+      request.headers.addAll(headers);
+
+      final appLanguage = Provider.of<AppLanguage>(context, listen: false);
+      
+      // Send the request with a timeout
+      http.StreamedResponse response = await request.send().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw TimeoutException("Request timed out");
+        },
+      );
+
+      print("Response received - Status code: ${response.statusCode}");
+      print("Response reason: ${response.reasonPhrase}");
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseBody = await response.stream.bytesToString();
+        print('Business profile created successfully');
+        print('Response: $responseBody');
+
+        // Parse the response to confirm image was included
+        try {
+          final responseData = json.decode(responseBody);
+          final hasImage = responseData['image'] != null || 
+                           (responseData['business'] != null && 
+                            responseData['business']['image'] != null);
+          
+          print("Response includes image: $hasImage");
+        } catch (e) {
+          print("Could not parse response JSON: $e");
+        }
+
+        // Show success message
+        _showSnackbar(
+            await appLanguage.translate(
+                "Business profile created successfully!",
+                appLanguage.currentLanguage),
+            false);
+
+        // Navigate to bottom navigation
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePageWithBottomNav()),
+        );
+      } else {
+        final errorResponse = await response.stream.bytesToString();
+        print('Business profile creation failed:');
+        print('Status: ${response.statusCode}');
+        print('Reason: ${response.reasonPhrase}');
+        print('Response: $errorResponse');
+
+        // Try to parse error response for more detailed feedback
+        String errorMessage = "Failed to create business profile. Please try again.";
+        try {
+          final errorData = json.decode(errorResponse);
+          if (errorData.containsKey('error')) {
+            errorMessage = errorData['error'];
+          } else if (errorData.containsKey('message')) {
+            errorMessage = errorData['message'];
+          }
+        } catch (e) {
+          print("Could not parse error response: $e");
+        }
+
+        // Show error message
+        _showSnackbar(
+            await appLanguage.translate(errorMessage, appLanguage.currentLanguage),
+            true);
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print("Business profile creation error: $e");
+
+      String errorMessage = "Connection error. Please check your internet connection.";
+      if (e is TimeoutException) {
+        errorMessage = "Request timed out. Please try again.";
+      }
+
+      final appLanguage = Provider.of<AppLanguage>(context, listen: false);
+      _showSnackbar(
+          await appLanguage.translate(errorMessage, appLanguage.currentLanguage),
+          true);
+    }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -1420,7 +1570,7 @@ class _BusinessFormPageState extends State<BusinessFormPage> {
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submitBusinessDetails,
+                          onPressed: _isLoading ? null :  _submitBusinessDetails,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryBlue,
                             foregroundColor: Colors.white,
@@ -1442,6 +1592,7 @@ class _BusinessFormPageState extends State<BusinessFormPage> {
                                 ),
                         ),
                       ),
+                      
 
                       const SizedBox(height: 20),
 
@@ -1490,4 +1641,6 @@ class _BusinessFormPageState extends State<BusinessFormPage> {
     _longitudeController.dispose();
     super.dispose();
   }
+
+  
 }

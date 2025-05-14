@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:taskova/Model/api_config.dart';
+import 'package:taskova/auth/login.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
   final String email;
@@ -108,9 +109,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
           TextButton(
             onPressed: () {
               // Navigate to login screen and remove all previous routes
-              Navigator.pushNamedAndRemoveUntil(
+              Navigator.pushAndRemoveUntil(
                 context,
-                '/login',
+                MaterialPageRoute(builder: (context) => Login()),
                 (route) => false,
               );
             },
@@ -157,7 +158,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 10), 
+                  const SizedBox(height: 10),
 
                   Text(
                     'Enter the verification code sent to ${widget.email} and set your new password.',

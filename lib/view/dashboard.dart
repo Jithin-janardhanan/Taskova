@@ -56,10 +56,10 @@ class _DashboardState extends State<Dashboard> {
             IconButton(
               icon: Icon(Icons.person),
               onPressed: () {
-  Navigator.of(context).push(
-    MaterialPageRoute(builder: (context) => BusinessFormPage()),
-  );
-},
+                // Navigator.of(context).push(
+                //   MaterialPageRoute(builder: (context) => BusinessFormPage()),
+                // );
+              },
             ),
           ],
         ),
@@ -134,24 +134,24 @@ class _DashboardState extends State<Dashboard> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
               SizedBox(height: 12),
 
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: 3,
-                itemBuilder: (context, index) {
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      title: Text("Delivery Driver Needed"),
-                      subtitle: Text("Date: Today | Location: ABC Takeaway"),
-                      trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        // View or edit job post
-                      },
-                    ),
-                  );
-                },
-              ),
+              // ListView.builder(
+              //   shrinkWrap: true,
+              //   physics: NeverScrollableScrollPhysics(),
+              //   itemCount: 3,
+              //   itemBuilder: (context, index) {
+              //     return Card(
+              //       margin: EdgeInsets.symmetric(vertical: 8),
+              //       child: ListTile(
+              //         title: Text("Delivery Driver Needed"),
+              //         subtitle: Text("Date: Today | Location: ABC Takeaway"),
+              //         trailing: Icon(Icons.arrow_forward_ios, size: 16),
+              //         onTap: () {
+              //           // View or edit job post
+              //         },
+              //       ),
+              //     );
+              //   },
+              // ),
             ],
           ),
         ),

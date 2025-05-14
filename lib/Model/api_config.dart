@@ -81,4 +81,5 @@ class ApiConfig {
   // Business endpoints
   static String get businesses => '$baseUrl/api/shopkeeper/businesses/';
   static String get jobposts => '$baseUrl/api/job-posts/create/';
+  static String get regiserBusiness => '$baseUrl/api/shopkeeper/businesses/';
 }
